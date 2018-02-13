@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ch4BaseFile Template For Chapter 4 Examples</title>
+<script src="modernizr.js"></script>
+<script type="text/javascript">
+window.addEventListener('load', eventWindowLoaded, false);	
+var score = 0;
+var life = 3;
+var shapesList = [];
+var ball = {x:0, y:0,speed:.1};
+
+function eventWindowLoaded() {
+
+	canvasApp();
+	
+}
+
+function canvasSupport () {
+  	return Modernizr.canvas;
+}
+
+
+function canvasApp(){
+	
+
+	if (!canvasSupport()) {
+			 return;
+  	}else{
+        var theCanvas = document.getElementById('canvas');
+	    var context = theCanvas.getContext('2d');
+	}
+
+	window.addEventListener("click", onClickShapeFunction);
+	window.addEventListener('load', startUp(), false);
+	drawScreen();
+	createShape();
+	drawShape(context);
+
+	function onClickShapeFunction(evt) {
+		for (i = 0; i < shapesList.length; i++) {
+			var x = evt.pageX;
+			var y = evt.pageY;
+			var check = pointInCircle(shapesList[i].x, shapesList[i].y, x - 50, y - 50, shapesList[i].radius);
+			if(check) {
+				if (i > -1) {
+    				shapesList.splice(i, 1);
+				}
+				score++;
+				break;
+			}
+		}
+	}
+
+	function pointInCircle(x, y, cx, cy, radius) {
+  		var distancesquared = (x - cx) * (x - cx) + (y - cy) * (y - cy);
+  		return distancesquared <= radius * radius;
+	}
+
+	function drawScreen() {
+		context.fillStyle = '#aaaaaa';
+  		context.fillRect(0, 0, canvas.width, canvas.height);
+		context.fillStyle    = '#000000';
+		context.font         = '20px sans-serif';
+		context.textBaseline = 'top';
+		context.fillText  ("Score: " + score, 0, 0);
+		context.fillText  ("Life: " + life, 530, 0);
+
+	}
+
+	function gameOverScreen() {
+		context.fillStyle = '#aaaaaa';
+  		context.fillRect(0, 0, canvas.width, canvas.height);
+		context.fillStyle    = '#000000';
+		context.font         = '20px sans-serif';
+		context.textBaseline = 'top';
+		context.fillText  ("Score: " + score, 0, 0);
+		context.fillText  ("Life: " + life, 530, 0);
+		context.fillText ("GAME OVER", 275, 275);
+	}
+
+	function createShape() {
+		var shapesX = -60;
+		var shapesY = Math.floor((Math.random() * 400) + 20);
+		var sides = Math.floor((Math.random() * 6) + 3);
+		var radius = 60;
+		var color = getRandomColor();
+		addShape(shapesX, shapesY, sides, radius, color);
+	}
+
+	function addShape(x, y, sides, radius, color) {
+		var myRand = Math.floor(Math.random() * 3);
+		var type = "straight";
+		if(myRand == 1) {
+			type = "straight";
+		}
+		else if (myRand == 2) {
+			type = "spiral";
+		}
+		else {
+			type = "bounce";
+		}
+		shapesList.push({x: x, y:y, sides:sides, radius:radius, color:color, type:type, move:"UP"});
+	}
+
+
+	function drawShape(ctx) {
+		for(i=0; i < shapesList.length; i++) {
+			ctx.beginPath();
+			polygon(ctx, shapesList[i].x, shapesList[i].y, shapesList[i].radius, shapesList[i].sides, -Math.PI/2);
+			ctx.fillStyle=shapesList[i].color;
+			ctx.fill();
+			ctx.stroke();
+		}
+	}
+
+	function polygon(ctx, x, y, radius, sides, startAngle, anticlockwise) {
+  		if (sides < 3) return;
+  		var a = (Math.PI * 2)/sides;
+  		a = anticlockwise?-a:a;
+  		ctx.save();
+  		ctx.translate(x,y);
+  		ctx.rotate(startAngle);
+  		ctx.moveTo(radius,0);
+ 		for (var i = 1; i < sides; i++) {
+  	  		ctx.lineTo(radius*Math.cos(a*i),radius*Math.sin(a*i));
+  		}
+  		ctx.closePath();
+  		ctx.restore();
+	}
+
+	function getRandomColor() {
+  		var hue = 'rgb(' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ')';
+		return hue;
+	}
+
+	function moveElements() {
+		for(i = 0; i < shapesList.length; i++) {
+			if(shapesList[i].x == 600) {
+				if (i > -1) {
+    				shapesList.splice(i, 1);
+				}
+				life--;
+			}
+			else {
+				if(shapesList[i].type == "straight") {	
+					shapesList[i].x = shapesList[i].x + 1;
+				}
+				else if(shapesList[i].type == "bounce") {
+					shapesList[i].x = shapesList[i].x + 1;
+					if(shapesList[i].move == "UP") {
+						shapesList[i].y = shapesList[i].y + 1;
+						if(shapesList[i].y > 500) {
+							shapesList[i].move = "DOWN";
+						}
+					}
+					else if(shapesList[i].move == "DOWN"){
+						shapesList[i].y = shapesList[i].y - 1;
+						if(shapesList[i].y < 50) {
+							shapesList[i].move = "UP";
+						}
+					}
+				}
+				else if(shapesList[i].type == "spiral") {
+					shapesList[i].x = shapesList[i].x + 1;
+				}
+			}
+		}
+	}
+
+	function generateShapes() {
+		var temp = Math.floor(Math.random() * 1000);
+		if(temp < 15) {
+			createShape();
+		}
+	}
+
+
+	function startUp() {
+		gameLoop();
+	}
+
+	function gameLoop() {
+		if(life == 0) {
+			window.removeEventListener('load', startUp);
+			gameOverScreen();
+		}
+		else {
+			window.setTimeout(gameLoop, 15);
+			context.clearRect(0, 0, canvas.width, canvas.height);
+			generateShapes();
+			moveElements();
+			drawScreen();
+			drawShape(context);
+		}
+	}
+
+}
+
+
+</script> 
+</head>
+<body>
+<div style="position: absolute; top: 50px; left: 50px;">
+<canvas id="canvas" width="600" height="600">
+ Your browser does not support the HTML 5 Canvas. 
+</canvas>
+</div>
+</body>
+</html>
